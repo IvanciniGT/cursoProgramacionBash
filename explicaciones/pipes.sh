@@ -35,11 +35,10 @@ function filtrar_pings(){
         then
             printf $($1 $(rojo 'X'))
         else
-          printf $( $1 $(verde '.'))
+            printf $($1 $(verde '.'))
         fi
     done 
 }
-
 
 function contar_fallos(){
     hora_ultima_salida=0
@@ -62,17 +61,49 @@ function contar_fallos(){
     #            echo "ultima_salida=$hora_ultima_salida" > informe.pings
                 echo "numero_de_fallos_$1=$contador" >> informe.pings
             fi
-            
             echo "$linea"
         fi
     done 
 }
 
+function mostrar_informe(){
+    local __fallos_servidor_1
+    local __fallos_servidor_2
+    
+    while read -r linea
+    do
+        linea=${linea//numero_de_fallos_}
+        case $linea in
+            B=*)
+                __fallos_servidor_2=${linea//B=}
+            ;;
+            A=*)
+                __fallos_servidor_1=${linea//A=}
+            ;;
+        esac
+        clear
+        titulo Estadisticas
+        
+        echo Fallos servidor 1: $__fallos_servidor_1
+        echo Fallos servidor 2: $__fallos_servidor_2
+        
+        titulo Datos en tiempo real
+        cat "./fichero_tiempo_real"
+    done
+}
 
-(ping -i 1 -c 20 172.17.0.2 | contar_fallos A | filtrar_pings fondo_azul) & # Sincronización. No me llega el valor hasta que lo de dentro termine
-(ping -i 1 -c 20 172.17.0.3 | contar_fallos B | filtrar_pings fondo_amarillo) & # Sincronización. No me llega el valor hasta que lo de dentro termine
+> informe.pings
+> fichero_tiempo_real
 
-wait
+(ping -i 1 -c 10 172.17.0.2 | contar_fallos A | filtrar_pings fondo_azul >> ./fichero_tiempo_real) & # Sincronización. No me llega el valor hasta que lo de dentro termine
+pid_p1=$!
+(ping -i 1 -c 10 172.17.0.3 | contar_fallos B | filtrar_pings fondo_amarillo >> ./fichero_tiempo_real) & # Sincronización. No me llega el valor hasta que lo de dentro termine
+pid_p2=$!
+(tail -f informe.pings | mostrar_informe ) &
+pid_tail=$!
+wait $pid_p1
+wait $pid_p2
+kill -9 $pid_tail
 echo SALIENDO DEL PROGRAMA
 #echo
 #echo Número de fallos: $contador
