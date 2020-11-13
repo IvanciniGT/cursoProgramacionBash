@@ -89,21 +89,30 @@ function mostrar_informe(){
         
         titulo Datos en tiempo real
         cat "./fichero_tiempo_real"
+        echo
+        azul $(linea)
+        echo "Pulse una tecla para parar"
     done
 }
 
 > informe.pings
 > fichero_tiempo_real
 
-(ping -i 1 -c 10 172.17.0.2 | contar_fallos A | filtrar_pings fondo_azul >> ./fichero_tiempo_real) & # Sincronización. No me llega el valor hasta que lo de dentro termine
+(ping -i 1 172.17.0.2 | contar_fallos A | filtrar_pings fondo_azul >> ./fichero_tiempo_real) & # Sincronización. No me llega el valor hasta que lo de dentro termine
 pid_p1=$!
-(ping -i 1 -c 10 172.17.0.3 | contar_fallos B | filtrar_pings fondo_amarillo >> ./fichero_tiempo_real) & # Sincronización. No me llega el valor hasta que lo de dentro termine
+(ping -i 1 10 172.17.0.3 | contar_fallos B | filtrar_pings fondo_amarillo >> ./fichero_tiempo_real) & # Sincronización. No me llega el valor hasta que lo de dentro termine
 pid_p2=$!
-(tail -f informe.pings | mostrar_informe ) &
+(tail -f informe.pings | mostrar_informe ) & 
 pid_tail=$!
-wait $pid_p1
-wait $pid_p2
-kill -9 $pid_tail
+
+read -n1 
+
+#wait $pid_p1
+#wait $pid_p2
+pkill -TERM -P $pid_p1
+pkill -TERM -P $pid_p2
+
+pkill -TERM -P $pid_tail
 echo SALIENDO DEL PROGRAMA
 #echo
 #echo Número de fallos: $contador
