@@ -98,11 +98,11 @@ function mostrar_informe(){
 > informe.pings
 > fichero_tiempo_real
 
-(ping -i 1 172.17.0.2 | contar_fallos A | filtrar_pings fondo_azul >> ./fichero_tiempo_real) & # Sincronización. No me llega el valor hasta que lo de dentro termine
+(ping -i 1 172.17.0.2 | contar_fallos A | filtrar_pings fondo_azul >> ./fichero_tiempo_real)>/dev/null 2>&1 & # Sincronización. No me llega el valor hasta que lo de dentro termine
 pid_p1=$!
-(ping -i 1 10 172.17.0.3 | contar_fallos B | filtrar_pings fondo_amarillo >> ./fichero_tiempo_real) & # Sincronización. No me llega el valor hasta que lo de dentro termine
+(ping -i 1 10 172.17.0.3 | contar_fallos B | filtrar_pings fondo_amarillo >> ./fichero_tiempo_real)>/dev/null 2>&1  & # Sincronización. No me llega el valor hasta que lo de dentro termine
 pid_p2=$!
-(tail -f informe.pings | mostrar_informe ) & 
+(tail -f informe.pings | mostrar_informe )  2> /dev/null & 
 pid_tail=$!
 
 read -n1 
