@@ -5,12 +5,14 @@ source ../gui/formatos.sh
 function filtrar_pings(){
     while read -r linea
     do
-        if [[ "$linea" =~ Unreachable$ ]] #Destination Host Unreachable
+        if [[ ! "$linea" =~ time ]] #Destination Host Unreachable
         then
-            echo 'X' #$($1 $(rojo 'X'))
+            char="$(rojo "X")"
+            char="$($1 "$char")"
         else
-            echo '.' #$($1 $(verde '.'))
+            char="$($1 "$(verde '.')")"
         fi
+        printf "$char"
     done 
 }
 
@@ -19,7 +21,7 @@ function contar_fallos(){
     contador=0
     while read -r linea
     do
-        if [[ "$linea" =~ from || "$linea" =~ Unreachable ]]
+        if [[ ! "$linea" =~ time ]]
         then 
             hora=$(date +%s)
             
@@ -74,9 +76,9 @@ function mostrar_informe(){
 > informe.pings
 > fichero_tiempo_real
 
-coproc ping1 { ping -i 1 172.17.0.2; } # ping1_PID
+coproc ping1 { ping -i 1 -O 172.17.0.2; } # ping1_PID
 coproc contar1 { contar_fallos A<&${ping1}; }
-coproc filtrar1 { filtrar_pings<&${contar1}; }
+coproc filtrar1 { (filtrar_pings fondo_verde<&${contar1})>fichero_tiempo_real; }
 
 coproc tail1 { tail -f informe.pings; }
 mostrar_informe<&${tail1}
